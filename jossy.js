@@ -1,4 +1,104 @@
-function FileStructure() {
+exports.compile = function(fname, labels, context, callback) {
+    parseFile(fname, function(err, fileStructure) {
+        if (err) {
+            callback(err);
+            return;
+        }
+        callback(null, fileStructure.compile(labels, context));
+    });
+
+
+    var cache = {};
+
+    var directives = {
+        include: function(file, params, lineNumber, callback) {
+            var paramsParts = params.split('::');
+            var includeFname = file.getRelativePathOf(paramsParts.shift());
+            parseFile(includeFname, function(err, includeFile) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                file.addInclude(includeFile, paramsParts);
+                callback();
+            });
+        }
+    };
+
+    function parseFile(fname, callback) {
+        realpath(fname, function(err, fname) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            if (cache[fname]) {
+                callback(null, cache[fname]);
+                return;
+            }
+            require('fs').readFile(fname, 'utf8', function(err, content) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                var fileStructure = new FileStructure(fname);
+                var lines = content.split('\n');
+                (function parseLines(start) {
+                    var i;
+
+                    var asyncParseCallback = function(err) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        parseLines(i + 1);
+                    };
+
+                    for (i = start; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (line.match(/^\s*\/\/#(.*)$/)) {
+                            if (RegExp.$1) {
+                                var command = RegExp.$1.split(' ');
+                                var directive = command.shift();
+                                var params = command.join(' ');
+                                if (/^(include)$/.test(directive)) {
+                                    directives[directive](fileStructure, params, i, asyncParseCallback);
+                                    return;
+                                } else if (/^(blabla)$/.test(directive)) {
+                                    directives[directive](fileStructure, i, params);
+                                }
+                            }
+                        } else {
+                            fileStructure.addCode(line + (i < lines.length - 1 ? '\n' : ''));
+                        }
+                    }
+
+                    callback(null, fileStructure);
+                })(0);
+            });
+        });
+    }
+};
+
+var realpathCache = {};
+function realpath(fname, callback) {
+    if (realpathCache[fname]) {
+        callback(null, realpathCache[fname]);
+    } else {
+        require('fs').realpath(fname, function(err, absFname) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            absFname = absFname.replace(/\\/g, '/');
+            realpathCache[fname] = absFname;
+            callback(null, absFname);
+        });
+    }
+}
+
+
+function FileStructure(fname) {
+    this._fname = fname;
     this._root = {
         type: 'root',
         content: []
@@ -7,6 +107,11 @@ function FileStructure() {
 }
 
 FileStructure.prototype = {
+    getRelativePathOf: function(fname) {
+        var path = require('path');
+        return path.join(path.dirname(this._fname), fname);
+    },
+
     addCode: function(code) {
         this._currentBlock.content.push({
             type: 'code',
@@ -101,28 +206,11 @@ FileStructure.prototype = {
     },
 
     compile: function(labels, context) {
-        labels = labels || [];
-        context = context || {};
-        var result = [];
-        this._structure.forEach(function(block) {
-            if (this._isValidBlock(block, labels, context)) {
-                block.content.forEach(function(line) {
-                    if (line.type == 'code' && !line.included) {
-                        line.included = true;
-                        result.push(line.code);
-                    } else if (line.type == 'include') {
-                        result.push(line.fileStructure.compile(line.labels, context));
-                    } else if (line.type == 'set') {
-                        context[line.varname] = line.value;
-                    }
-                });
-            }
-        }, this);
-        return result.join('');
+        return this._compileBlock(this._root, labels || [], context || {});
     },
 
-    without: function(labels) {
-
+    without: function(labels, context) {
+        this._compileBlock(this._root, labels || [], context || {});
     },
     
 
@@ -147,7 +235,7 @@ FileStructure.prototype = {
             return block.fileStructure.compile(block.labels, context);
 
         } else if (block.type == 'without') {
-            block.fileStructure.without(block.labels);
+            block.fileStructure.without(block.labels, context);
             return '';
 
         } else if (block.type == 'set') {
