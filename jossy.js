@@ -41,6 +41,7 @@ exports.compile = function(fname, labels, context, callback) {
                     return;
                 }
                 var fileStructure = new FileStructure(fname);
+                cache[fname] = fileStructure;
                 var lines = content.split('\n');
                 (function parseLines(start) {
                     var i;
