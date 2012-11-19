@@ -22,6 +22,14 @@ exports.compile = function(fname, labels, context, callback) {
                 file.addInclude(includeFile, paramsParts);
                 callback();
             });
+        },
+
+        label: function(file, label, lineNumber) {
+            file.beginLabel(label);
+        },
+
+        endlabel: function(file, params, lineNumber) {
+            file.endLabel();
         }
     };
 
@@ -64,7 +72,7 @@ exports.compile = function(fname, labels, context, callback) {
                                 if (/^(include)$/.test(directive)) {
                                     directives[directive](fileStructure, params, i, asyncParseCallback);
                                     return;
-                                } else if (/^(blabla)$/.test(directive)) {
+                                } else if (/^(label|endlabel)$/.test(directive)) {
                                     directives[directive](fileStructure, i, params);
                                 }
                             }
