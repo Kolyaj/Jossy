@@ -11,7 +11,7 @@ exports.compile = function(fname, labels, context, callback) {
     var cache = {};
 
     var directives = {
-        include: function(file, params, lineNumber, callback) {
+        include: function(file, params, callback) {
             var paramsParts = params.split('::');
             var includeFname = file.getRelativePathOf(paramsParts.shift());
             parseFile(includeFname, function(err, includeFile) {
@@ -24,11 +24,11 @@ exports.compile = function(fname, labels, context, callback) {
             });
         },
 
-        label: function(file, label, lineNumber) {
+        label: function(file, label) {
             file.beginLabel(label);
         },
 
-        endlabel: function(file, params, lineNumber) {
+        endlabel: function(file, params) {
             file.endLabel();
         }
     };
@@ -70,10 +70,10 @@ exports.compile = function(fname, labels, context, callback) {
                                 var directive = command.shift();
                                 var params = command.join(' ');
                                 if (/^(include)$/.test(directive)) {
-                                    directives[directive](fileStructure, params, i, asyncParseCallback);
+                                    directives[directive](fileStructure, params, asyncParseCallback);
                                     return;
                                 } else if (/^(label|endlabel)$/.test(directive)) {
-                                    directives[directive](fileStructure, i, params);
+                                    directives[directive](fileStructure, params);
                                 }
                             }
                         } else {
