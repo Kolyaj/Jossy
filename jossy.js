@@ -28,61 +28,78 @@ exports.compile = function(fname, labels, context, callback) {
             file.beginLabel(label);
         },
 
-        endlabel: function(file, params) {
+        endlabel: function(file) {
             file.endLabel();
         }
     };
 
     function parseFile(fname, callback) {
-        realpath(fname, function(err, fname) {
-            if (err) {
-                callback(err);
+        require('path').exists(fname, function(exists) {
+            if (!exists) {
+                callback(new Error('File ' + fname + ' not found'));
                 return;
             }
-            if (cache[fname]) {
-                callback(null, cache[fname]);
-                return;
-            }
-            require('fs').readFile(fname, 'utf8', function(err, content) {
+            realpath(fname, function(err, fname) {
                 if (err) {
                     callback(err);
                     return;
                 }
-                var fileStructure = new FileStructure(fname);
-                cache[fname] = fileStructure;
-                var lines = content.split('\n');
-                (function parseLines(start) {
-                    var i;
-
-                    var asyncParseCallback = function(err) {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-                        parseLines(i + 1);
-                    };
-
-                    for (i = start; i < lines.length; i++) {
-                        var line = lines[i];
-                        if (line.match(/^\s*\/\/#(.*)$/)) {
-                            if (RegExp.$1) {
-                                var command = RegExp.$1.split(' ');
-                                var directive = command.shift();
-                                var params = command.join(' ');
-                                if (/^(include)$/.test(directive)) {
-                                    directives[directive](fileStructure, params, asyncParseCallback);
-                                    return;
-                                } else if (/^(label|endlabel)$/.test(directive)) {
-                                    directives[directive](fileStructure, params);
-                                }
-                            }
-                        } else {
-                            fileStructure.addCode(line + (i < lines.length - 1 ? '\n' : ''));
-                        }
+                if (cache[fname]) {
+                    callback(null, cache[fname]);
+                    return;
+                }
+                require('fs').readFile(fname, 'utf8', function(err, content) {
+                    if (err) {
+                        callback(err);
+                        return;
                     }
+                    var fileStructure = new FileStructure(fname);
+                    cache[fname] = fileStructure;
+                    var lines = content.split('\n');
+                    (function parseLines(start) {
+                        var i;
+                        var errors = [];
 
-                    callback(null, fileStructure);
-                })(0);
+                        var appendError = function(err) {
+                            var msg = err.message;
+                            var line = i + 1;
+                            errors.push(new JossyError(msg, fname, line));
+                            fileStructure.error(msg);
+                        };
+
+                        var asyncParseCallback = function(err) {
+                            if (err) {
+                                appendError(err);
+                            }
+                            parseLines(i + 1);
+                        };
+
+                        for (i = start; i < lines.length; i++) {
+                            var line = lines[i];
+                            if (line.match(/^\s*\/\/#(.*)$/)) {
+                                if (RegExp.$1) {
+                                    var command = RegExp.$1.split(' ');
+                                    var directive = command.shift();
+                                    var params = command.join(' ');
+                                    if (/^(include)$/.test(directive)) {
+                                        directives[directive](fileStructure, params, asyncParseCallback);
+                                        return;
+                                    } else if (/^(label|endlabel)$/.test(directive)) {
+                                        try {
+                                            directives[directive](fileStructure, params);
+                                        } catch (err) {
+                                            appendError(err);
+                                        }
+                                    }
+                                }
+                            } else {
+                                fileStructure.addCode(line + (i < lines.length - 1 ? '\n' : ''));
+                            }
+                        }
+
+                        callback(null, fileStructure);
+                    })(0);
+                });
             });
         });
     }
@@ -204,6 +221,10 @@ FileStructure.prototype = {
         this._currentBlock = this._currentBlock.parent;
     },
 
+    error: function(msg) {
+        this.addCode('throw new Error("Jossy error: " + ' + JSON.stringify(msg) + ');\n');
+    },
+
     close: function() {
         if (this._currentBlock.type != 'root') {
             throw new Error('Неожиданный конец файла');
@@ -268,4 +289,15 @@ FileStructure.prototype = {
         }
         return false;
     }
+};
+
+
+function JossyError(msg, file, line) {
+    this._message = msg;
+    this._file = file;
+    this._line = line;
+}
+
+JossyError.prototype.toString = function() {
+    return 'JossyError: ' + this._message + ' (' + this._file + ':' + this._line + ')';
 };
