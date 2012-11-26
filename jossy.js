@@ -101,7 +101,7 @@ exports.compile = function(fname, labels, context, callback) {
                     }
                     var fileStructure = new FileStructure(fname);
                     cache[fname] = fileStructure;
-                    var lines = content.split('\n');
+                    var lines = content.split(/\r?\n/);
                     (function parseLines(start) {
                         var i;
                         var errors = [];
@@ -122,7 +122,7 @@ exports.compile = function(fname, labels, context, callback) {
 
                         for (i = start; i < lines.length; i++) {
                             var line = lines[i];
-                            if (line.match(/^\s*\/\/#(.*)$/)) {
+                            if (line.match(/^\s*\/\/#([\s\S]*)$/)) {
                                 if (RegExp.$1) {
                                     var command = RegExp.$1.split(' ');
                                     var directive = command.shift();
