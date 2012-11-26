@@ -24,12 +24,58 @@ exports.compile = function(fname, labels, context, callback) {
             });
         },
 
+        without: function(file, params, callback) {
+            var paramsParts = params.split('::');
+            var includeFname = file.getRelativePathOf(paramsParts.shift());
+            parseFile(includeFname, function(err, includeFile) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                file.addWithout(includeFile, paramsParts);
+                callback();
+            });
+        },
+
         label: function(file, label) {
             file.beginLabel(label);
         },
 
         endlabel: function(file) {
             file.endLabel();
+        },
+
+        if: function(file, params) {
+            if (!params.trim()) {
+                throw new Error('Bad if directive');
+            }
+            var args = params.split(/\s+/);
+            var value = true;
+            if (args.length > 1 && args[0] == 'not') {
+                value = false;
+                args.shift();
+            }
+            file.beginIf(args[0], value);
+        },
+
+        endif: function(file) {
+            file.endIf();
+        },
+
+        set: function(file, params) {
+            if (!params.trim()) {
+                throw new Error('Bad set directive');
+            }
+            var args = params.split(/\s+/);
+            file.addSet(args[0]);
+        },
+
+        unset: function(file, params) {
+            if (!params.trim()) {
+                throw new Error('Bad unset directive');
+            }
+            var args = params.split(/\s+/);
+            file.addUnset(args[0]);
         }
     };
 
@@ -81,15 +127,17 @@ exports.compile = function(fname, labels, context, callback) {
                                     var command = RegExp.$1.split(' ');
                                     var directive = command.shift();
                                     var params = command.join(' ');
-                                    if (/^(include)$/.test(directive)) {
+                                    if (/^(include|without)$/.test(directive)) {
                                         directives[directive](fileStructure, params, asyncParseCallback);
                                         return;
-                                    } else if (/^(label|endlabel)$/.test(directive)) {
+                                    } else if (/^(label|endlabel|if|endif|set|unset)$/.test(directive)) {
                                         try {
                                             directives[directive](fileStructure, params);
                                         } catch (err) {
                                             appendError(err);
                                         }
+                                    } else {
+                                        appendError(new Error('Unknown directive ' + directive));
                                     }
                                 }
                             } else {
@@ -150,7 +198,7 @@ FileStructure.prototype = {
         this._currentBlock.content.push({
             type: 'include',
             fileStructure: fileStructure,
-            labels: labels
+            labels: labels.length == 0 ? ['full'] : labels
         });
     },
 
@@ -158,7 +206,7 @@ FileStructure.prototype = {
         this._currentBlock.content.push({
             type: 'without',
             fileStructure: fileStructure,
-            labels: labels
+            labels: labels.length == 0 ? ['full'] : labels
         });
     },
 
@@ -222,7 +270,7 @@ FileStructure.prototype = {
     },
 
     error: function(msg) {
-        this.addCode('throw new Error("Jossy error: " + ' + JSON.stringify(msg) + ');\n');
+        this.addCode('throw new Error(' + JSON.stringify('Jossy error: ' + msg) + ');\n');
     },
 
     close: function() {
