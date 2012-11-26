@@ -6,4 +6,4 @@ alert('t2');
 
 //#label t3
 alert('t3');
-//#endlable t3
+//#endlabel t3
