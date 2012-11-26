@@ -27,7 +27,7 @@ if (process.argv[2]) {
                             if (err) {
                                 throw err;
                             }
-                            var status = jossyResult == result ? 'ok' : 'fail';
+                            var status = jossyResult.trim() == result.trim() ? 'ok' : 'fail';
                             console.log(dir + ' ' + status);
                         });
                     });
