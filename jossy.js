@@ -13,15 +13,25 @@ exports.compile = function(fname, labels, context, callback) {
     var directives = {
         include: function(file, params, callback) {
             var paramsParts = params.split('::');
-            var includeFname = file.getRelativePathOf(paramsParts.shift());
-            parseFile(includeFname, function(err, includeFile) {
-                if (err) {
+            var includeFileName = paramsParts.shift();
+            if (includeFileName) {
+                var absFileName = file.getRelativePathOf(includeFileName);
+                parseFile(absFileName, function(err, includeFile) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    file.addInclude(includeFile, paramsParts);
+                    callback();
+                });
+            } else {
+                try {
+                    file.addInclude(file, paramsParts);
+                    callback();
+                } catch (err) {
                     callback(err);
-                    return;
                 }
-                file.addInclude(includeFile, paramsParts);
-                callback();
-            });
+            }
         },
 
         without: function(file, params, callback) {
@@ -208,7 +218,7 @@ FileStructure.prototype = {
         this._currentBlock.content.push({
             type: 'include',
             fileStructure: fileStructure,
-            labels: labels.length == 0 ? ['full'] : labels
+            labels: labels
         });
     },
 
@@ -216,7 +226,7 @@ FileStructure.prototype = {
         this._currentBlock.content.push({
             type: 'without',
             fileStructure: fileStructure,
-            labels: labels.length == 0 ? ['full'] : labels
+            labels: labels
         });
     },
 
@@ -343,7 +353,7 @@ FileStructure.prototype = {
         } else if (block.type == 'if') {
             return !!context[block.varname] == !!block.value;
         } else if (block.type == 'label') {
-            return labels.indexOf(block.label) > -1 || labels.indexOf('full') > -1;
+            return !labels.length || labels.indexOf(block.label) > -1;
         }
         return false;
     }
