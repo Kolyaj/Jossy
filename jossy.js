@@ -1,15 +1,4 @@
 exports.compile = function(fname, labels, context, callback) {
-    parseFile(fname, function(err, fileStructure) {
-        if (err) {
-            callback(err);
-            return;
-        }
-        callback(null, fileStructure.compile(labels, context));
-    });
-
-
-    var cache = {};
-
     var directives = {
         include: function(file, params, callback) {
             var paramsParts = params.split('::');
@@ -89,6 +78,8 @@ exports.compile = function(fname, labels, context, callback) {
         }
     };
 
+    var cache = {};
+
     function parseFile(fname, callback) {
         normalizePath(fname, function(err, fname) {
             if (err) {
@@ -155,6 +146,14 @@ exports.compile = function(fname, labels, context, callback) {
             });
         });
     }
+
+    parseFile(fname, function(err, fileStructure) {
+        if (err) {
+            callback(err);
+            return;
+        }
+        callback(null, fileStructure.compile(labels, context));
+    });
 };
 
 var realpathCache = {};
