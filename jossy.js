@@ -80,92 +80,102 @@ exports.compile = function(fname, labels, context, callback) {
     };
 
     function parseFile(fname, callback) {
-        require('path').exists(fname, function(exists) {
-            if (!exists) {
-                callback(new Error('File ' + fname + ' not found'));
+        normalizePath(fname, function(err, fname) {
+            if (err) {
+                callback(err);
                 return;
             }
-            realpath(fname, function(err, fname) {
+            if (cache[fname]) {
+                callback(null, cache[fname]);
+                return;
+            }
+            require('fs').readFile(fname, 'utf8', function(err, content) {
                 if (err) {
                     callback(err);
                     return;
                 }
-                if (cache[fname]) {
-                    callback(null, cache[fname]);
-                    return;
-                }
-                require('fs').readFile(fname, 'utf8', function(err, content) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    var fileStructure = new FileStructure(fname);
-                    cache[fname] = fileStructure;
-                    var lines = content.split(/\r?\n/);
-                    (function parseLines(start) {
-                        var i;
-                        var errors = [];
+                var fileStructure = new FileStructure(fname);
+                cache[fname] = fileStructure;
+                var lines = content.split(/\r?\n/);
+                (function parseLines(start) {
+                    var i;
+                    var errors = [];
 
-                        var appendError = function(err) {
-                            var msg = err.message;
-                            var line = i + 1;
-                            errors.push(new JossyError(msg, fname, line));
-                            fileStructure.error(msg);
-                        };
+                    var appendError = function(err) {
+                        var msg = err.message;
+                        var line = i + 1;
+                        errors.push(new JossyError(msg, fname, line));
+                        fileStructure.error(msg);
+                    };
 
-                        var asyncParseCallback = function(err) {
-                            if (err) {
-                                appendError(err);
-                            }
-                            parseLines(i + 1);
-                        };
-
-                        for (i = start; i < lines.length; i++) {
-                            var line = lines[i];
-                            if (line.match(/^\s*\/\/#([\s\S]*)$/)) {
-                                if (RegExp.$1) {
-                                    var command = RegExp.$1.split(' ');
-                                    var directive = command.shift();
-                                    var params = command.join(' ');
-                                    if (/^(include|without)$/.test(directive)) {
-                                        directives[directive](fileStructure, params, asyncParseCallback);
-                                        return;
-                                    } else if (/^(label|endlabel|if|endif|set|unset)$/.test(directive)) {
-                                        try {
-                                            directives[directive](fileStructure, params);
-                                        } catch (err) {
-                                            appendError(err);
-                                        }
-                                    } else {
-                                        appendError(new Error('Unknown directive ' + directive));
-                                    }
-                                }
-                            } else {
-                                fileStructure.addCode(line + (i < lines.length - 1 ? '\n' : ''));
-                            }
+                    var asyncParseCallback = function(err) {
+                        if (err) {
+                            appendError(err);
                         }
+                        parseLines(i + 1);
+                    };
 
-                        callback(null, fileStructure);
-                    })(0);
-                });
+                    for (i = start; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (line.match(/^\s*\/\/#([\s\S]*)$/)) {
+                            if (RegExp.$1) {
+                                var command = RegExp.$1.split(' ');
+                                var directive = command.shift();
+                                var params = command.join(' ');
+                                if (/^(include|without)$/.test(directive)) {
+                                    directives[directive](fileStructure, params, asyncParseCallback);
+                                    return;
+                                } else if (/^(label|endlabel|if|endif|set|unset)$/.test(directive)) {
+                                    try {
+                                        directives[directive](fileStructure, params);
+                                    } catch (err) {
+                                        appendError(err);
+                                    }
+                                } else {
+                                    appendError(new Error('Unknown directive ' + directive));
+                                }
+                            }
+                        } else {
+                            fileStructure.addCode(line + (i < lines.length - 1 ? '\n' : ''));
+                        }
+                    }
+
+                    callback(null, fileStructure);
+                })(0);
             });
         });
     }
 };
 
 var realpathCache = {};
-function realpath(fname, callback) {
+function normalizePath(fname, callback) {
     if (realpathCache[fname]) {
         callback(null, realpathCache[fname]);
     } else {
-        require('fs').realpath(fname, function(err, absFname) {
-            if (err) {
-                callback(err);
+        require('path').exists(fname, function(exists) {
+            if (!exists) {
+                callback(new Error('File ' + fname + ' not found'));
                 return;
             }
-            absFname = absFname.replace(/\\/g, '/');
-            realpathCache[fname] = absFname;
-            callback(null, absFname);
+            require('fs').realpath(fname, function(err, absFname) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                require('fs').stat(fname, function(err, stat) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    if (!stat.isFile()) {
+                        callback(new Error('File ' + fname + ' not found'));
+                        return;
+                    }
+                    absFname = absFname.replace(/\\/g, '/');
+                    realpathCache[fname] = absFname;
+                    callback(null, absFname);
+                });
+            });
         });
     }
 }
