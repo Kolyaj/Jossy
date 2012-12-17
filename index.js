@@ -11,7 +11,7 @@ if (require.main == module) {
             compileFile(process.argv[2], process.argv.slice(3));
         }
     } else {
-        console.log('Usage:');
+        console.log('Usage: ...');
     }
 } else {
     module.exports = require('./jossy');
