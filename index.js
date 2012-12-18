@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 if (require.main == module) {
     if (process.argv[2]) {
         if (process.argv[2] == 'server') {

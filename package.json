@@ -1,0 +1,22 @@
+{
+    "author": {
+        "name": "Kolyaj",
+        "email": "kolyaj@yandex.ru",
+        "url": "https://github.com/Kolyaj"
+    },
+    "name": "jossy",
+    "description": "JavaScript files builder",
+    "version": "0.0.1",
+    "homepage": "https://github.com/Kolyaj/Jossy",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/Kolyaj/Jossy.git"
+    },
+    "dependencies": {},
+    "devDependencies": {},
+    "optionalDependencies": {},
+    "engines": {
+        "node": "*"
+    },
+    "bin": "index.js"
+}
