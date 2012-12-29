@@ -27,8 +27,9 @@ if (process.argv[2]) {
                             if (err) {
                                 throw err;
                             }
-                            var status = jossyResult.trim() == result.trim() ? 'ok' : 'fail';
-                            console.log(dir + ' ' + status);
+                            var status = jossyResult.trim() == result.trim() ? '\033[92mok\033[39m' : '\033[91mfail\033[39m';
+                            var tabs = '\t' + (dir.length < 8 ? '\t' : '');
+                            console.log(dir + tabs + status);
                         });
                     });
                 }
