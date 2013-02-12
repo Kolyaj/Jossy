@@ -206,4 +206,9 @@ Jossy необходим только на этапе разработки, по
 
     my-site.dev/js/ => localhost:9595/home/me/projects/test/js-dev/
 
-А если вы можете написать подобный конфиг для Apache, напишите сюда, пожалуйста.
+В случае работы с Apache, необходимо подключить модули proxy и proxy_http, а затем добавить в файл конфигурации следующие строки
+
+    ProxyRequests off
+
+    ProxyPass /js/ http://127.0.0.1:9595/home/me/projects/test/js-dev/ retry=0
+    ProxyPassReverse /js/ http://127.0.0.1:9595/home/me/projects/test/js-dev/
