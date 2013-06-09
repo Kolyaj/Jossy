@@ -1,12 +1,12 @@
 {
-    "author": {
-        "name": "Kolyaj",
-        "email": "kolyaj@yandex.ru",
-        "url": "https://github.com/Kolyaj"
-    },
+    "author": "Kolyaj <kolyaj@yandex.ru> (https://github.com/Kolyaj)",
+    "contributors": [
+        "Kolyaj <kolyaj@yandex.ru> (https://github.com/Kolyaj)",
+        "Pavel Akhmetchanov <pavel.power@gmail.ru> (http://github.com/pavelpower)"
+    ],
     "name": "jossy",
     "description": "JavaScript files builder",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "homepage": "https://github.com/Kolyaj/Jossy",
     "repository": {
         "type": "git",
