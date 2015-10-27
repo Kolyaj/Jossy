@@ -1,11 +1,12 @@
 var basePath = 'tests';
+var Jossy = require('../jossy').Jossy;
+var jossy = new Jossy();
 
 if (process.argv[2]) {
-    require('../jossy').compile(require('path').join(basePath, process.argv[2], 'test.js'), [], {}, function(err, result) {
-        if (err) {
-            throw err;
-        }
+    jossy.compile(require('path').join(basePath, process.argv[2], 'test.js'), [], {}).then(function(result) {
         console.log(result);
+    }).catch(function(err) {
+        console.error(err.stack);
     });
 } else {
     require('fs').readdir(basePath, function(err, dirs) {
@@ -19,10 +20,7 @@ if (process.argv[2]) {
                     throw err;
                 }
                 if (stat.isDirectory()) {
-                    require('../jossy').compile(require('path').join(dirPath, 'test.js'), [], {}, function(err, jossyResult) {
-                        if (err) {
-                            throw err;
-                        }
+                    jossy.compile(require('path').join(dirPath, 'test.js'), [], {}).then(function(jossyResult) {
                         require('fs').readFile(require('path').join(dirPath, 'result.js'), 'utf8', function(err, result) {
                             if (err) {
                                 throw err;
@@ -31,6 +29,9 @@ if (process.argv[2]) {
                             var tabs = '\t' + (dir.length < 8 ? '\t' : '');
                             console.log(dir + tabs + status);
                         });
+                    }).catch(function(err) {
+                        console.log(dir);
+                        console.error(err.stack);
                     });
                 }
             });

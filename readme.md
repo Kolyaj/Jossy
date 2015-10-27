@@ -172,43 +172,9 @@ Jossy необходим только на этапе разработки, по
 
 ### Использование сборщика из NodeJS
 
-    var jossy = require('jossy');
-    jossy.compile('String.js', ['escapeHTML'], {ie: true}, function(err, result) {
-        if (err) {
-            trhow err;
-        }
+    var Jossy = require('jossy').Jossy;
+    var jossy = new Jossy();
+    jossy.compile('String.js', ['escapeHTML'], {ie: true}).then(function(result) {
         console.log(result);
     });
 
-### Сервер для разработки
-
-Во время разработки пересобирать файлы после каждого изменения крайне неудобно, поэтому внутри Jossy есть разработческий сервер. Запускается он
-
-    jossy server 8888 debug
-
-Где 8888 -- порт, который будет слушать сервер, debug -- флаг, передаваемый во все сборки. Если третий параметр отсутствует или не число, то будет использован порт 9595.
-
-    jossy server debug
-
-Сервер считает запрошенный pathname абсолютным путём до файла, который нужно собрать. Например, запрос http://localhost:9595/home/me/projects/test/file.js соберёт и вернёт файл /home/me/projects/test/file.js.
-
-В Windows можно указывать букву диска, а можно и не указывать, если файл лежит на том же диске, где и рабочая директория запущенного Jossy.
-
-Теперь, можно подключать JavaScript на сайт в зависимости от окружения (develop или production).
-
-А можно, если вы используете nginx на разработческой машине, добавить несколько строк в конфиг
-
-    location /js/ {
-        proxy_pass http://127.0.0.1:9595/home/me/projects/test/js-dev/
-    }
-
-Если вы используете [Yaxy](https://github.com/Kolyaj/Yaxy), то достаточно одной строки в конфиге.
-
-    my-site.dev/js/ => localhost:9595/home/me/projects/test/js-dev/
-
-В случае работы с Apache, необходимо подключить модули proxy и proxy_http, а затем добавить в файл конфигурации следующие строки
-
-    ProxyRequests off
-
-    ProxyPass /js/ http://127.0.0.1:9595/home/me/projects/test/js-dev/ retry=0
-    ProxyPassReverse /js/ http://127.0.0.1:9595/home/me/projects/test/js-dev/

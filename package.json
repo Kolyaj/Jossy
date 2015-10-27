@@ -6,17 +6,24 @@
     },
     "name": "jossy",
     "description": "JavaScript files builder",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "homepage": "https://github.com/Kolyaj/Jossy",
     "repository": {
         "type": "git",
         "url": "git://github.com/Kolyaj/Jossy.git"
     },
-    "dependencies": {},
+    "dependencies": {
+        "iclass": "0.0.2",
+        "lblr-parser": "^0.1.0",
+        "q": "^1.4.1"
+    },
     "devDependencies": {},
     "optionalDependencies": {},
     "engines": {
         "node": "*"
     },
-    "bin": "index.js"
+    "bin": "index.js",
+    "scripts": {
+        "test": "node tests"
+    }
 }
