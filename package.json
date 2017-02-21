@@ -13,17 +13,18 @@
         "url": "git://github.com/Kolyaj/Jossy.git"
     },
     "dependencies": {
-        "iclass": "0.0.2",
-        "lblr-parser": "^0.1.0",
-        "q": "^1.4.1"
+        "iclass": "^0.0.2",
+        "lblr-parser": "^1.0.3"
     },
-    "devDependencies": {},
+    "devDependencies": {
+        "mocha": "^3.2.0"
+    },
     "optionalDependencies": {},
     "engines": {
         "node": "*"
     },
-    "bin": "index.js",
+    "bin": "bit/index.js",
     "scripts": {
-        "test": "node tests"
+        "test": "mocha"
     }
 }
