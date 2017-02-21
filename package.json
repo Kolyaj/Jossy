@@ -6,7 +6,7 @@
     },
     "name": "jossy",
     "description": "JavaScript files builder",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "homepage": "https://github.com/Kolyaj/Jossy",
     "repository": {
         "type": "git",
@@ -23,7 +23,7 @@
     "engines": {
         "node": "*"
     },
-    "bin": "bit/index.js",
+    "bin": "bin/index.js",
     "scripts": {
         "test": "mocha"
     }
