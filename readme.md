@@ -170,9 +170,8 @@ Jossy необходим только на этапе разработки, по
 
 ### Использование сборщика из NodeJS
 
-    var Jossy = require('jossy').Jossy;
-    var jossy = new Jossy();
-    jossy.compile('String.js', {ie: true}).then(function(result) {
+    var jossy = require('jossy');
+    jossy('path/to/file.js', {ie: true}).then(function(result) {
         console.log(result);
     });
 
