@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
-var Jossy = require('../lib/Jossy');
+var jossy = require('../lib/Jossy');
 
 var context = {};
 var args = [];
@@ -19,7 +19,7 @@ if (!args[0]) {
 }
 
 var output = args[1] ? fs.createWriteStream(args[1], 'utf8') : process.stdout;
-new Jossy().compile(args[0], context).then((result) => {
+jossy(args[0], context).then((result) => {
     output.write(result);
     if (output != process.stdout) {
         output.end();
