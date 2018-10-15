@@ -2,54 +2,85 @@ var jossy = require('../lib/Jossy');
 var assert = require('assert');
 var fs = require('fs');
 var path = require('path');
+var {promisify} = require('util');
+var mock = require('mock-fs');
+
+var readFile = promisify(fs.readFile);
+
+var readTest = async(testFileName) => {
+    var files = {};
+    var input;
+    var output;
+    var currentFileContent;
+    var testContent = await readFile(path.join(__dirname, 'tests', testFileName), 'utf8');
+    testContent.split('\n').forEach((line) => {
+        if (line.indexOf('//===') === 0) {
+            var fname = line.substr(5).trim();
+            currentFileContent = [];
+            if (fname) {
+                if (!input) {
+                    input = fname;
+                }
+                files[fname] = currentFileContent;
+            } else {
+                output = currentFileContent;
+            }
+        } else {
+            if (currentFileContent) {
+                currentFileContent.push(line + '\n');
+            } else {
+                throw new Error(`Unexpected file content in ${testFileName}`)
+            }
+        }
+    });
+    Object.keys(files).forEach((fname) => {
+        files[fname] = files[fname].join('');
+    });
+    if (!input) {
+        throw new Error(`No file found in ${testFileName}`);
+    }
+    if (!output) {
+        throw new Error(`Output not found in ${testFileName}`);
+    }
+    return {
+        files: files,
+        input: input,
+        output: output.join('')
+    };
+};
 
 describe('Jossy', () => {
-    var dirs = fs.readdirSync(__dirname);
-    dirs.forEach((dir) => {
-        var dirPath = path.join(__dirname, dir);
-        if (fs.statSync(dirPath).isDirectory()) {
-            it(dir, function() {
-                return Promise.all([jossy(path.join(__dirname, dir, 'test.js')), readResult(dir)]).then((results) => {
-                    assert.equal(results[0].trim(), results[1].trim());
-                });
+    afterEach(() => {
+        mock.restore();
+    });
+
+    fs.readdirSync(path.join(__dirname, 'tests')).forEach((fname) => {
+        if (/\.js$/.test(fname)) {
+            it(fname.substr(0, fname.length - 3), async() => {
+                var test = await readTest(fname);
+                mock(test.files);
+                var result = await jossy(test.input);
+                assert.equal(result.trim(), test.output.trim());
             });
         }
     });
 
-    it('Multiple compile', function() {
+    it('Multiple compile', async() => {
         var compiler = new jossy.Jossy();
-        var dir = 'include-11';
-        return readResult(dir).then((result) => {
-            return compiler.compile(path.join(__dirname, dir, 'test.js')).then((compileResult1) => {
-                assert.equal(compileResult1, result);
-                return compiler.compile(path.join(__dirname, dir, 'test.js')).then((compileResult2) => {
-                    assert.equal(compileResult2, result);
-                });
-            });
-        });
+        var test = await readTest('include-11.js');
+        mock(test.files);
+        var result1 = await compiler.compile(test.input);
+        var result2 = await compiler.compile(test.input);
+        assert.equal(result1.trim(), test.output.trim());
+        assert.equal(result2.trim(), test.output.trim());
     });
 
-    it('Multiple concurent compile', function() {
+    it('Multiple concurent compile', async() => {
         var compiler = new jossy.Jossy();
-        var dir = 'include-11';
-        return readResult(dir).then((result) => {
-            return Promise.all([compiler.compile(path.join(__dirname, dir, 'test.js')), compiler.compile(path.join(__dirname, dir, 'test.js'))]).then(([compileResult1, compileResult2]) => {
-                assert.equal(compileResult1, result);
-                assert.equal(compileResult2, result);
-            });
-        });
+        var test = await readTest('include-11.js');
+        mock(test.files);
+        var [result1, result2] = await Promise.all([compiler.compile(test.input), compiler.compile(test.input)]);
+        assert.equal(result1.trim(), test.output.trim());
+        assert.equal(result2.trim(), test.output.trim());
     });
 });
-
-function readResult(dir) {
-    return new Promise((resolve, reject) => {
-        var dirname = path.join(__dirname, dir);
-        fs.readFile(path.join(dirname, 'result.js'), 'utf8', (err, content) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(content.replace(/\$\{__dirname}/g, dirname));
-            }
-        });
-    });
-}

@@ -17,7 +17,8 @@
         "lblr-parser": "^1.0.3"
     },
     "devDependencies": {
-        "mocha": "^3.2.0"
+        "mocha": "^5.2.0",
+        "mock-fs": "^4.7.0"
     },
     "main": "lib/Jossy.js",
     "bin": "bin/index.js",
