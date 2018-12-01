@@ -16,6 +16,4 @@ alert(4);
 alert(1);
 alert(3);
 alert(4);
-
-
 alert(2);

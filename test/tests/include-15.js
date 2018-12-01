@@ -20,9 +20,5 @@ alert('bar.bar');
 alert('foo');
 alert('bar');
 alert('foo.foo');
-
-
 alert('bar.bar');
-
-
 alert('index');

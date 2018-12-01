@@ -12,9 +12,5 @@ alert('bar');
 
 //===
 alert('foo');
-
-
 alert('bar');
-
-
 alert('index');

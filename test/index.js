@@ -34,7 +34,7 @@ var readTest = async(testFileName) => {
         }
     });
     Object.keys(files).forEach((fname) => {
-        files[fname] = files[fname].join('');
+        files[fname] = files[fname].join('').trim();
     });
     if (!input) {
         throw new Error(`No file found in ${testFileName}`);
@@ -45,7 +45,7 @@ var readTest = async(testFileName) => {
     return {
         files: files,
         input: input,
-        output: output.join('')
+        output: output.join('').trim()
     };
 };
 
