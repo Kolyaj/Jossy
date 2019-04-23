@@ -83,4 +83,13 @@ describe('Jossy', () => {
         assert.equal(result1.trim(), test.output.trim());
         assert.equal(result2.trim(), test.output.trim());
     });
+
+    it('Compile inline code', async() => {
+        var compiler = new jossy.Jossy();
+        mock({
+            '/foo/bar.js': 'alert(1);'
+        });
+        var result = await compiler.compileCode('/foo/baz.js', '//#include bar.js');
+        assert.equal(result.trim(), 'alert(1);');
+    });
 });
