@@ -19,7 +19,7 @@
     "devDependencies": {
         "eslint": "^6.7.2",
         "mocha": "^5.2.0",
-        "mock-fs": "^4.7.0"
+        "mock-fs": "^4.10.4"
     },
     "main": "lib/Jossy.js",
     "bin": "bin/index.js",

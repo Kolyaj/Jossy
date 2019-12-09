@@ -92,4 +92,21 @@ describe('Jossy', () => {
         var result = await compiler.compileCode('/foo/baz.js', '//#include bar.js');
         assert.equal(result.trim(), 'alert(1);');
     });
+
+    it('Build error', async() => {
+        var compiler = new jossy.Jossy();
+        mock({
+            '/foo/bar.js': '//#include foo.js'
+        });
+        var result = await compiler.compile('/foo/bar.js');
+        assert.equal(result.trim(), 'throw new Error("JossyError: ENOENT, no such file or directory \'/foo/foo.js\'.");');
+    });
+
+    it('Build error and failOnError', async() => {
+        var compiler = new jossy.Jossy(true);
+        mock({
+            '/foo/bar.js': '//#include foo.js'
+        });
+        assert.rejects(async() => {await compiler.compile('/foo/bar.js');}, {message: /no such file or directory/});
+    });
 });
