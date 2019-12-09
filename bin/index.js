@@ -7,13 +7,12 @@ var context = {};
 var options = {};
 var args = [];
 process.argv.slice(2).forEach((arg) => {
-    if (arg.indexOf('--') == 0) {
-        const optionName = arg.substr(2).replace(
-            /-./g,
-            (symbol) => symbol.substr(1).toUpperCase()
-        );
+    if (arg.indexOf('--') === 0) {
+        var optionName = arg.substr(2).replace(/-./g, (symbol) => {
+            return symbol.substr(1).toUpperCase();
+        });
         options[optionName] = true;
-    } else if (arg.indexOf('-') == 0) {
+    } else if (arg.indexOf('-') === 0) {
         context[arg.substr(1)] = true;
     } else {
         args.push(arg);
@@ -28,7 +27,7 @@ if (!args[0]) {
 var output = args[1] ? fs.createWriteStream(args[1], 'utf8') : process.stdout;
 jossy(args[0], context, options).then((result) => {
     output.write(result);
-    if (output != process.stdout) {
+    if (output !== process.stdout) {
         output.end();
     }
 }).catch((err) => {

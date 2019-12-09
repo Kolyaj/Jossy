@@ -17,6 +17,7 @@
         "lblr-parser": "^1.0.3"
     },
     "devDependencies": {
+        "eslint": "^6.7.2",
         "mocha": "^5.2.0",
         "mock-fs": "^4.7.0"
     },
