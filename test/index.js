@@ -11,10 +11,21 @@ var readTest = async(testFileName) => {
     var files = {};
     var input;
     var output;
+    var layers;
     var currentFileContent;
     var testContent = await readFile(path.join(__dirname, 'tests', testFileName), 'utf8');
     testContent.split('\n').forEach((line) => {
-        if (line.indexOf('//===') === 0) {
+        if (line.match(/^\/\/@(layer|layers)=(.*)/)) {
+            var name = RegExp.$1;
+            var value = RegExp.$2;
+            if (name === 'layer') {
+                layers = value.trim();
+            } else if (name === 'layers') {
+                layers = value.split(',').map((item) => {
+                    return item.trim();
+                });
+            }
+        } else if (line.indexOf('//===') === 0) {
             var fname = line.substr(5).trim();
             currentFileContent = [];
             if (fname) {
@@ -29,7 +40,7 @@ var readTest = async(testFileName) => {
             if (currentFileContent) {
                 currentFileContent.push(line + '\n');
             } else {
-                throw new Error(`Unexpected file content in ${testFileName}`)
+                throw new Error(`Unexpected file content in ${testFileName}`);
             }
         }
     });
@@ -45,7 +56,8 @@ var readTest = async(testFileName) => {
     return {
         files: files,
         input: input,
-        output: output.join('').trim()
+        output: output.join('').trim(),
+        layers: layers
     };
 };
 
@@ -59,7 +71,7 @@ describe('Jossy', () => {
             it(fname.substr(0, fname.length - 3), async() => {
                 var test = await readTest(fname);
                 mock(test.files);
-                var result = await jossy(test.input);
+                var result = await new jossy.Jossy().compile(test.input, {}, test.layers);
                 assert.equal(result.trim(), test.output.trim());
             });
         }
