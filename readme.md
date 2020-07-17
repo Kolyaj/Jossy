@@ -175,14 +175,14 @@ Jossy необходим только на этапе разработки, по
 
 ### Сборка из командной строки
 
-    jossy input.js output.js -debug -ie
+    jossy -i input.js -o output.js --set debug --set ie
 
-Где debug и ie -- флаги, которые можно использовать в директиве `#if`. Если output.js не указан, то результат сборки выводится в `stdout`.
+Где debug и ie -- флаги, которые можно использовать в директиве `#if`. Если параметр -o не указан, то результат сборки выводится в `stdout`.
 
 ### Использование сборщика из NodeJS
 
-    var jossy = require('jossy');
-    jossy('path/to/file.js', {ie: true}).then(function(result) {
+    var {Jossy} = require('jossy');
+    new Jossy().compile('path/to/file.js', {ie: true}).then(function(result) {
         console.log(result);
     });
 

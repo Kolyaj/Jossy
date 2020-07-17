@@ -17,6 +17,7 @@
         "url": "git://github.com/Kolyaj/Jossy.git"
     },
     "dependencies": {
+        "commander": "^5.1.0",
         "iclass": "^0.0.2",
         "lblr-parser": "^1.0.3"
     },

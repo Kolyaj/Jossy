@@ -71,7 +71,7 @@ describe('Jossy', () => {
             it(fname.substr(0, fname.length - 3), async() => {
                 var test = await readTest(fname);
                 mock(test.files);
-                var result = await new jossy.Jossy().compile(test.input, {}, test.layers);
+                var result = await new jossy.Jossy().compile(test.input, {}, [], test.layers);
                 assert.equal(result.trim(), test.output.trim());
             });
         }
